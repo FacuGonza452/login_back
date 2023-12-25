@@ -22,8 +22,6 @@ class MongoDbManager {
       console.error('Error al desconectar de MongoDB:', error);
     }
   }
-
-  // Puedes agregar más métodos según tus necesidades para realizar operaciones en la base de datos
 }
 
 module.exports = MongoDbManager;

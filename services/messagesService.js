@@ -1,4 +1,3 @@
-
 const MessageModel = require('../dao/models/messageModel');
 
 class MessageService {

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Time Products</title>
+</head>
+<body>
+    <h1>Lista de Productos en Tiempo Real</h1>
+    <ul id="productList">
+        <!-- La lista de productos se actualizará dinámicamente aquí -->
+    </ul>
+
+    <!-- Formulario para agregar o eliminar productos -->
+    <form id="productForm">
+        <label for="productName">Nombre del Producto:</label>
+        <input type="text" id="productName" required>
+        <button type="submit">Agregar Producto</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Conexión con el servidor de socket.io
+        const socket = io();
+
+        // Manejar eventos de productos desde el servidor
+        socket.on('productAdded', (product) => {
+            // Actualizar la lista de productos al agregar uno nuevo
+            const productList = document.getElementById('productList');
+            const newItem = document.createElement('li');
+            newItem.textContent = `${product.title} - ${product.description} - ${product.price}`;
+            productList.appendChild(newItem);
+        });
+
+        socket.on('productRemoved', (productId) => {
+            // Actualizar la lista de productos al eliminar uno
+            const productList = document.getElementById('productList');
+            const itemToRemove = Array.from(productList.children).find((item) => {
+                // Asumiendo que el ID del producto está en el texto del elemento
+                return item.textContent.includes(productId);
+            });
+
+            if (itemToRemove) {
+                productList.removeChild(itemToRemove);
+            }
+        });
+
+        // Manejar el envío del formulario
+        document.getElementById('productForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const productName = document.getElementById('productName').value.trim();
+
+            if (productName !== '') {
+                // Emitir un evento para agregar el producto
+                socket.emit('addProduct', { title: productName });
+                document.getElementById('productName').value = '';
+            }
+        });
+    </script>
+</body>
+</html>

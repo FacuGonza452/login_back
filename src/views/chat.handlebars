@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+</head>
+<body>
+    <h1>Chat</h1>
+    
+    <div id="chatMessages">
+        {{#each messages}}
+            <div>{{this.user}}: {{this.message}}</div>
+        {{/each}}
+    </div>
+
+    <form id="messageForm">
+        <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." />
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io();
+
+            // Enviar mensaje desde el formulario
+            document.getElementById('messageForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const messageInput = document.getElementById('messageInput');
+                const message = messageInput.value.trim();
+
+                if (message !== '') {
+                    // Emitir el mensaje al servidor
+                    socket.emit('chatMessage', { user: 'NombreUsuario', message });
+
+                    // Limpiar el campo de entrada
+                    messageInput.value = '';
+                }
+            });
+
+            // Recibir mensajes del servidor y mostrarlos en el chat
+            socket.on('chatMessage', function (data) {
+                const chatMessages = document.getElementById('chatMessages');
+                const newMessage = document.createElement('div');
+                newMessage.textContent = `${data.user}: ${data.message}`;
+                chatMessages.appendChild(newMessage);
+            });
+        });
+    </script>
+</body>
+</html>
