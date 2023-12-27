@@ -1,4 +1,4 @@
-const MessageModel = require('../dao/models/messageModel');
+const MessageModel = require('../src/models/messageModel');
 
 class MessageService {
   async saveMessage(user, message) {

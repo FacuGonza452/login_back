@@ -1,4 +1,4 @@
-const ProductModel = require('../dao/models/productModel');
+const ProductModel = require('../src/models/productModel');
 
 class ProductService {
   async createProduct(productData) {
@@ -17,6 +17,17 @@ class ProductService {
       console.error('Error al obtener todos los productos:', error);
       throw error;
     }
+  }
+
+  async getPaginatedProducts(page = 1, limit = 10) {
+    // Implementar la lógica para obtener productos paginados desde MongoDB
+    // Puedes utilizar el método skip() y limit() de Mongoose
+    const products = await ProductModel.find()
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    return products;
   }
 }
 

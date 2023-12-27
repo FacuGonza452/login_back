@@ -6,11 +6,13 @@ const exphbs = require('express-handlebars');
 const mongoose = require('mongoose');
 const ProductService = require('../services/productService');
 const MessageService = require('../services/messagesService');
-const MessageModel = require('../dao/models/messageModel');
-const ProductModel = require('../dao/models/productModel');
-const productRouter = require('./routes');
-const cartRouter = require('./cartRoutes');
-const { router: routesRouter, io: routesIo } = require('./messagesRoutes'); 
+const CartService = require('../services/cartService'); // Agrega el servicio de carrito
+const MessageModel = require('../src/models/messageModel');
+const ProductModel = require('../src/models/productModel');
+const CartModel = require('../src/models/cartModel'); // Agrega el modelo de carrito
+const productRouter = require('./routes/routes');
+const cartRouter = require('./routes/cartRoutes');
+const { router: routesRouter, io: routesIo } = require('./routes/messagesRoutes'); 
 
 const app = express();
 const server = http.createServer(app);
@@ -47,7 +49,7 @@ app.use(express.json());
 // Rutas para productos y carritos
 app.use('/products', productRouter);
 app.use('/carts', cartRouter);
-app.use('/chat', routesRouter); // Usa el router de routes.js
+app.use('/chat', routesRouter);
 
 // Configuración de WebSockets
 io.on('connection', (socket) => {
@@ -67,13 +69,14 @@ io.on('connection', (socket) => {
     console.log('Mensajes encontrados:', messages);
 
     // Emitir el mensaje a todos los clientes conectados
-    routesIo.emit('chatMessage', data); // Usa el io de routes.js
+    routesIo.emit('chatMessage', data);
   });
 });
 
 // Ruta para listar todos los productos
 productRouter.get('/', async (req, res) => {
   try {
+    const productService = new ProductService();
     const products = await productService.getAllProducts();
     res.json(products);
   } catch (error) {
@@ -84,17 +87,60 @@ productRouter.get('/', async (req, res) => {
 
 // Ruta para la vista home.handlebars
 app.get('/', (req, res) => {
-  res.render('home'); // Renderiza la vista home.handlebars
+  res.render('home');
 });
-app.get('/chat', (req, res) => {
-  res.render('chat');
+
+// Ruta para la vista de productos paginados
+app.get('/products', async (req, res) => {
+  try {
+    const productService = new ProductService();
+    const { page = 1, limit = 10, sort, query } = req.query;
+    const products = await productService.getPaginatedAndFilteredProducts(page, limit, sort, query);
+    res.render('products', { products });
+  } catch (error) {
+    console.error('Error al obtener productos paginados y filtrados:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
-app.get('/carts', (req, res) => {
-  res.render('carts');
+
+// Ruta para la vista de detalles de un producto
+app.get('/products/:pid', async (req, res) => {
+  try {
+    const productService = new ProductService();
+    const productId = req.params.pid;
+    const product = await productService.getProductById(productId);
+    res.render('productDetails', { product });
+  } catch (error) {
+    console.error('Error al obtener detalles del producto:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
-app.get('/products', (req, res) => {
-  res.render('products');
+
+// Ruta para la vista de carritos
+app.get('/carts', async (req, res) => {
+  try {
+    const cartService = new CartService();
+    const carts = await cartService.getAllCarts();
+    res.render('carts', { carts });
+  } catch (error) {
+    console.error('Error al obtener carritos:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
+
+// Ruta para la vista de detalles de un carrito
+app.get('/carts/:cid', async (req, res) => {
+  try {
+    const cartService = new CartService();
+    const cartId = req.params.cid;
+    const cart = await cartService.getCartById(cartId);
+    res.render('cartDetails', { cart });
+  } catch (error) {
+    console.error('Error al obtener detalles del carrito:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Escuchar en el puerto
 server.listen(port, () => {
   console.log(`Servidor Express en ejecución en el puerto ${port}`);

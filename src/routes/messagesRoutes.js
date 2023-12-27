@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const MessageService = require('../services/messagesService');
+const MessageService = require('../../services/messagesService');
 
 // Configuración de Socket.IO
 const { Server } = require('socket.io');
