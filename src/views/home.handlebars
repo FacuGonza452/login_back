@@ -6,7 +6,9 @@
     <title>Home</title>
 </head>
 <body>
-    <h1>Lista de Productos</h1>
+    <h1>Bienvenido, {{user}}</h1>
+    <h2>Lista de Productos</h2>
+    <a href="/logout">Logout</a>
     <ul>
         {{#each products}}
             <li>{{this.title}} - {{this.description}} - {{this.price}}</li>

@@ -1,20 +1,29 @@
 const UserModel = require('../src/models/userModel');
 
 class UserService {
-  async createUser(user) {
+  async registerUser(user) {
     try {
       return await UserModel.create(user);
     } catch (error) {
-      console.error('Error al crear el usuario:', error);
+      console.error('Error al registrar el usuario:', error);
       throw error;
     }
   }
 
-  async getUserById(userId) {
+  async loginUser(email, password) {
     try {
-      return await UserModel.findById(userId);
+      return await UserModel.findOne({ email, password });
     } catch (error) {
-      console.error('Error al obtener el usuario por ID:', error);
+      console.error('Error al autenticar el usuario:', error);
+      throw error;
+    }
+  }
+
+  async getUserByEmail(email) {
+    try {
+      return await UserModel.findOne({ email });
+    } catch (error) {
+      console.error('Error al obtener el usuario por correo electrónico:', error);
       throw error;
     }
   }

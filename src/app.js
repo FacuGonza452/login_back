@@ -4,15 +4,24 @@ const path = require('path');
 const socketIo = require('socket.io');
 const exphbs = require('express-handlebars');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
+const passport = require('passport'); // Agregado: Importar Passport
 const ProductService = require('../services/productService');
 const MessageService = require('../services/messagesService');
-const CartService = require('../services/cartService'); // Agrega el servicio de carrito
+const CartService = require('../services/cartService');
+const UserService = require('../services/userService');
 const MessageModel = require('../src/models/messageModel');
 const ProductModel = require('../src/models/productModel');
-const CartModel = require('../src/models/cartModel'); // Agrega el modelo de carrito
+const CartModel = require('../src/models/cartModel');
+const UserModel = require('../src/models/userModel');
 const productRouter = require('./routes/routes');
 const cartRouter = require('./routes/cartRoutes');
-const { router: routesRouter, io: routesIo } = require('./routes/messagesRoutes'); 
+const userRouter = require('./routes/userRoutes');
+const { router: routesRouter, io: routesIo } = require('./routes/messagesRoutes');
+
+// Configuración de Passport
+require('../config/passport')(passport);
 
 const app = express();
 const server = http.createServer(app);
@@ -46,9 +55,22 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware para el manejo de JSON
 app.use(express.json());
 
-// Rutas para productos y carritos
+// Middleware de sesiones
+app.use(session({
+  secret: 'tu_secreto',
+  resave: false,
+  saveUninitialized: false,
+  store: new MongoStore({ mongooseConnection: mongoose.connection }),
+}));
+
+// Configuración de Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Rutas para productos, carritos y usuarios
 app.use('/products', productRouter);
 app.use('/carts', cartRouter);
+app.use('/user', userRouter);
 app.use('/chat', routesRouter);
 
 // Configuración de WebSockets
@@ -139,6 +161,20 @@ app.get('/carts/:cid', async (req, res) => {
     console.error('Error al obtener detalles del carrito:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
+});
+
+// Ruta para logout
+app.get('/logout', (req, res) => {
+  // Destruir la sesión
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error al cerrar sesión:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    } else {
+      // Redirigir a la vista de login
+      res.redirect('/user/login');
+    }
+  });
 });
 
 // Escuchar en el puerto
